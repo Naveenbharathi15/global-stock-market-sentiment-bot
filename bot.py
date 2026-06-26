@@ -158,8 +158,14 @@ async def fetch_india_sentiment() -> dict:
         r.raise_for_status()
         result  = r.json()["chart"]["result"][0]
         closes  = result["indicators"]["quote"][0]["close"]
-        vix_now  = closes[-1]
-        vix_prev = closes[-2] if len(closes) > 1 else vix_now
+        
+        # Filter out None values and get valid data points
+        valid_closes = [c for c in closes if c is not None]
+        if not valid_closes:
+            raise ValueError("No valid India VIX data available")
+        
+        vix_now  = valid_closes[-1]
+        vix_prev = valid_closes[-2] if len(valid_closes) > 1 else vix_now
 
         # Convert VIX to a fear/greed score (0-100, inverted)
         # VIX 10 = 90 (greed), VIX 40 = 0 (extreme fear), linear clamp
